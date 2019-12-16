@@ -12,7 +12,7 @@ const csvParse = require('csv-parse')
 const functions = require('firebase-functions')
 const Qs = require('qs')
 
-const app = dialogflow()
+const app = dialogflow({ debug: true })
 const DISTANCE_PER_DEGREE = 111194.92664455874 // 經緯度每一度的大約距離（單位：公尺）
 const EARTH_RADIUS = 6371e3 // 地球的半徑（單位：公尺）
 const NEARBY_DISTANCE = 5000 // 多少距離才能算是附近（單位：公尺）
@@ -96,7 +96,7 @@ app.intent('附近的換電站結果', async (conv, params, granted) => {
     conv.close('很抱歉，沒辦法取得您的定位資訊。')
     return
   }
-  let batterys = _.filter(await getBatterys(), s => isBetween(s.lat, lat - NEARBY_DEGREE, lat + NEARBY_DEGREE) && isBetween(s.lng, lng - NEARBY_DEGREE, lng + NEARBY_DEGREE))
+  let batterys = _.filter(await getBatterys(), s => s.state === '1' && isBetween(s.lat, lat - NEARBY_DEGREE, lat + NEARBY_DEGREE) && isBetween(s.lng, lng - NEARBY_DEGREE, lng + NEARBY_DEGREE))
   _.each(batterys, s => {
     s.distance = haversineDistance(lat, lng, s.lat, s.lng)
   })
