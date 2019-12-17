@@ -159,7 +159,7 @@ const gaEvent = async (conv, payload) => {
 
 app.intent('附近的換電站詢問地點', async conv => {
   if (_.get(conv, 'user.verification') !== 'VERIFIED') {
-    conv.close('很抱歉，由於您目前是訪客身份，所以無法取得您的定位資訊，請於 Google 助理登入後再試一次。')
+    conv.close('由於您現在是訪客身份，無法取得裝置位置來搜尋 GOGORO 換電站，建議您可以登入 Google 助理或是再試一次。')
     await gaScreenView(conv, '無法取得定位/訪客')
     return
   }
@@ -172,13 +172,13 @@ app.intent('附近的換電站詢問地點', async conv => {
 
 app.intent('附近的換電站結果', async (conv, params, granted) => {
   const ability = getConvAbility(conv)
-  const { latitude: lat, longitude: lng } = _.get(conv, 'device.location.coordinates', {})
+  const location = _.get(conv, 'device.location', {})
+  const { latitude: lat, longitude: lng } = location.coordinates
   if (!granted || !lat || !lng) {
     conv.close('很抱歉，沒辦法取得您的定位資訊。')
     await gaScreenView(conv, '無法取得定位/用戶未授權')
     return
   }
-  await gaEvent(conv, { ec: '附近的換電站結果', ea: '裝置位置', el: JSON.stringify(_.get(conv, 'device.location')) })
   let batterys = _.filter(await getBatterys(), s => s.state === '1' && isBetween(s.lat, lat - NEARBY_DEGREE, lat + NEARBY_DEGREE) && isBetween(s.lng, lng - NEARBY_DEGREE, lng + NEARBY_DEGREE))
   _.each(batterys, s => {
     s.distance = haversineDistance(lat, lng, s.lat, s.lng)
@@ -188,6 +188,7 @@ app.intent('附近的換電站結果', async (conv, params, granted) => {
   if (!battry) {
     conv.close('很抱歉，在附近沒有 GOGORO 的換電站。')
     await gaScreenView(conv, '附近換電站/查無結果')
+    await gaEvent(conv, { ec: '附近的換電站結果', ea: '裝置位置', el: JSON.stringify(location) })
     return
   }
   // 回覆結果文字
@@ -195,6 +196,7 @@ app.intent('附近的換電站結果', async (conv, params, granted) => {
   // 顯示附近站點的導航
   if (ability.browser && batterys.length > 1) conv.close(renderBatteryBrowseCarousel(batterys))
   await gaScreenView(conv, '附近換電站/查詢成功')
+  await gaEvent(conv, { ec: '附近的換電站結果', ea: '裝置位置', el: JSON.stringify(location) })
   await gaEvent(conv, { ec: '附近的換電站結果', ea: '查詢結果', el: JSON.stringify(battry) })
 })
 
