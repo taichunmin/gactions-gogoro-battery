@@ -40,7 +40,12 @@ exports.getBatterys = async () => {
     const BATTERY_API = 'https://webapi.gogoro.com/api/vm/list'
     // const BATTERY_API = 'https://storage.googleapis.com/storage-gogoro.taichunmin.idv.tw/data/gogoro-battery.json'
     const res = await axios.get(BATTERY_API)
-    return _.map(res.data, exports.batteryParser)
+    let batterys = _.map(res.data, exports.batteryParser)
+    // 先根據 address 和 name 排序後根據 address 去重複
+    batterys = _.sortedUniqBy(_.sortBy(batterys, ['address', 'state', 'name']), b => b.address)
+    // 將站名後的英文去除
+    _.each(batterys, b => { b.name = b.name.replace(/[A-Z]+$/, '') })
+    return batterys
   } catch (err) {
     console.log(err)
   }
