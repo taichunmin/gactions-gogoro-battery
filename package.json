@@ -14,7 +14,7 @@
     "firebase-functions": "^3.14.0",
     "lodash": "^4.17.21",
     "papaparse": "^5.3.0",
-    "qs": "^6.10.1",
+    "qs": "^6.10.3",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
